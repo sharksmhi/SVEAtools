@@ -21,6 +21,8 @@ elif __file__:
 
 
 class MainApp(tk.Tk):
+    _on_color = '#0ecc41'
+    _off_color = '#cc110e'
 
     def __init__(self,  *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
@@ -70,7 +72,8 @@ class MainApp(tk.Tk):
         grid_configure(self, nr_rows=1, nr_columns=1)
 
         # Start SHARKtools
-        self._button_start_sharktools = tk.Button(start_sharktools_frame, text='STARTA SHARKtools', command=self._start_sharktools)
+        self._button_start_sharktools = tk.Button(start_sharktools_frame, text='STARTA SHARKtools',
+                                                  command=self._start_sharktools, bg=self._on_color)
         self._button_start_sharktools.grid(row=0, column=0)
         grid_configure(start_sharktools_frame, nr_rows=1, nr_columns=1)
 
@@ -83,7 +86,7 @@ class MainApp(tk.Tk):
         self._frame_notebook.grid(row=2, column=0, sticky='nw')
         self._notebook = None
 
-        tk.Button(install_frame, text='Installera / Uppdatera', command=self._install).grid(row=3, column=0)
+        tk.Button(install_frame, text='Installera / Uppdatera', command=self._install, bg=self._on_color).grid(row=3, column=0)
 
         grid_configure(install_frame, nr_rows=4, nr_columns=2)
 
@@ -101,7 +104,7 @@ class MainApp(tk.Tk):
         self._stringvar_backup_dir = tk.StringVar()
         tk.Label(backup_frame, textvariable=self._stringvar_backup_dir).grid(row=1, column=1, **layout)
 
-        tk.Button(backup_frame, text='Gör backup', command=self._backup).grid(row=2, column=0, **layout)
+        tk.Button(backup_frame, text='Gör backup', command=self._backup, bg=self._on_color).grid(row=2, column=0, **layout)
 
         grid_configure(backup_frame, nr_rows=3, nr_columns=1)
 
@@ -119,17 +122,18 @@ class MainApp(tk.Tk):
             return
 
         try:
-            self._button_start_sharktools.config(text='SHARKtools körs...')
+            self._button_start_sharktools.config(text='SHARKtools körs...', state='disabled', bg=self._off_color)
             self._button_start_sharktools.update_idletasks()
             subprocess.call([str(path)])
         except Exception:
             messagebox.showerror('Något gick fel', traceback.format_exc())
         finally:
-            self._button_start_sharktools.config(text='STARTA SHARKtools')
+            self._button_start_sharktools.config(text='STARTA SHARKtools', state='normal', bg=self._on_color)
             self._button_start_sharktools.update_idletasks()
 
     def _backup(self):
         if not self._backuper:
+            return
             return
         try:
             self._backuper.backup()
