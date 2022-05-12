@@ -3,6 +3,7 @@ from pathlib import Path
 import sys
 import logging
 import subprocess
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -56,10 +57,10 @@ class Installer:
     def _extract_data(self):
         self._ext_python_path()
         self._ext_install_root_directory()
-        self._ext_requirements()
         self._ext_wheels_dir()
         self._ext_wheels()
         self._ext_repos()
+        self._ext_requirements()
         self._ext_venv_path()
         self._ext_main_file_path()
 
@@ -76,7 +77,34 @@ class Installer:
             self._install_root_directory.mkdir(parents=True, exist_ok=True)
 
     def _ext_requirements(self):
-        self._requirements = self._config.get('requirements')
+        all_requirements = set()
+        template_string_master = 'https://raw.githubusercontent.com/sharksmhi/%/master/requirements.txt'
+        template_string_main = 'https://raw.githubusercontent.com/sharksmhi/%/main/requirements.txt'
+        for _, repo_url in self._repos:
+            repo = Path(repo_url).stem
+            url_master = template_string_master.replace('%', repo)
+            url_main = template_string_main.replace('%', repo)
+            req_list = get_requirements_from_url(url_master, url_main)
+            all_requirements.update(req_list)
+
+        config_requirements = self._config.get('requirements', [])
+        all_requirements.update(config_requirements)
+
+        wheel_names = [path.stem.split('-')[0].lower() for path in self._wheels]
+        repo_names = [Path(url).stem.lower() for _, url in self._repos]
+
+        self._requirements = []
+        for req in all_requirements:
+            req_lower = req.lower()
+            if not req.strip():
+                continue
+            if req.startswith('#'):
+                continue
+            if req_lower in wheel_names:
+                continue
+            if req_lower in repo_names:
+                continue
+            self._requirements.append(req)
 
     def _ext_wheels(self):
         self._wheels = []
@@ -251,6 +279,15 @@ class Installer:
         return self._get_path_from_config('run_file_name', 'run.bat', root_directory=self._install_root_directory)
 
 
-if __name__ == '__main__':
-    c = Installer()
-    c.create_batch_file()
+def get_requirements_from_url(*args):
+    req_list = []
+    for url in args:
+        response = requests.get(url)
+        if response.status_code != 200:
+            continue
+        req_list = [item.strip() for item in response.text.strip().split('\n')]
+        break
+    else:
+        logger.warning(f'No requirements file found at url(s): {args}')
+    return req_list
+
