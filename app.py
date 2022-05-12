@@ -9,6 +9,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
 
+import logging
 import screeninfo
 
 from svea_tools.backup import Backup
@@ -18,6 +19,8 @@ if getattr(sys, 'frozen', False):
     DIRECTORY = Path(sys.executable).parent
 elif __file__:
     DIRECTORY = Path(__file__).parent
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class MainApp(tk.Tk):
