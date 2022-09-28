@@ -44,11 +44,13 @@ class Installer:
         
     @property
     def config_keys(self):
-        return list(self._config.keys())
+        return list(self.config.keys())
 
     @property
     def config(self):
-        return self._config.copy()
+        config = self._config.copy()
+        config['requirements'] = self._requirements
+        return config
         
     def _load_config_file(self):
         with open(self._config_file) as fid:
@@ -143,7 +145,7 @@ class Installer:
 
     def _create_batch_lines(self):
         self._batch_lines = []
-        self._batch_lines.append('ECHO OFF')
+        self._batch_lines.append('ECHO ON')
         self._batch_lines.append('cls')
         disk = str(self._install_root_directory)[0]
         self._batch_lines.append(f'cd {disk}:')
@@ -209,13 +211,14 @@ class Installer:
         self._batch_lines.append('ECHO.')
         self._batch_lines.append(f'ECHO {repo_url} : {repo_path}')
         self._batch_lines.append('if exist ' + str(repo_path) + '\\ (')
-        self._cd_reset_pull(repo_path)
+        self._cd_clean_reset_pull(repo_path)
         self._batch_lines.append(') else (')
         self._clone_repo(repo_path.parent, repo_url)
         self._batch_lines.append(')')
 
-    def _cd_reset_pull(self, path):
+    def _cd_clean_reset_pull(self, path):
         self._batch_lines.append(f'cd {path}')
+        self._batch_lines.append('git clean -f -d')
         self._batch_lines.append('git reset --hard')
         # self._batch_lines.append('git checkout main')
         self._batch_lines.append('git pull')
